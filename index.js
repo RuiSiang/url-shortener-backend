@@ -57,7 +57,7 @@ router.post('/urlgen', async (ctx) => {
     key: hash.slice(0, 8),
     data: {
       [process.env.COLUMN_FAMILY_ID]: {
-        value: ctx.request.body.url,
+        value: { expiry: moment().add(ctx.request.body.expiry, 'seconds').format(), url: ctx.request.body.url },
       }
     }
   }
@@ -74,7 +74,11 @@ router.get('/:link', async (ctx) => {
 
   try {
     const [row] = await table.row(ctx.params.link).get()
-    ctx.body = (row.data)
+    if (moment(row.data.expiry) < moment()) {
+      ctx.status = 404
+    } else {
+      ctx.body = (row.data.url)
+    }
   } catch (err) {
     ctx.status = 404
   }
