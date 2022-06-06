@@ -74,11 +74,11 @@ router.get('/:link', async (ctx) => {
 
   try {
     const [row] = await table.row(ctx.params.link).get()
-    const { data } = JSON.parse(row)
+    const data = JSON.parse(row.data[process.env.COLUMN_FAMILY_ID].value[0].value)
     if (moment(data.expiry) < moment()) {
       ctx.status = 404
     } else {
-      ctx.body = (data.url)
+      ctx.redirect(data.url)
     }
   } catch (err) {
     ctx.status = 404
